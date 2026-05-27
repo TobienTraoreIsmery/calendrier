@@ -983,7 +983,7 @@ function getAllVacRanges(zone) {
   return ranges;
 }
 
-// Données affichage sidebar : vacances à venir ou en cours
+// Données affichage sidebar : vacances en cours + à venir (max 6)
 function getVacancesDisplay(zone) {
   const today = new Date();
   today.setHours(0,0,0,0);
@@ -991,11 +991,11 @@ function getVacancesDisplay(zone) {
   for(const yr of Object.values(VAC_DATA)) {
     if(yr[zone]) yr[zone].forEach(v => all.push(v));
   }
-  // Garder uniquement celles qui se terminent >= aujourd'hui, triées
+  // En cours (dernier jour >= aujourd'hui) ou à venir, triées chronologiquement
   return all
-    .filter(v => v.e >= today)
+    .filter(v => { const e = new Date(v.e); e.setHours(23,59,59); return e >= today; })
     .sort((a,b) => a.s - b.s)
-    .slice(0,7);
+    .slice(0,6);
 }
 
 // Compatibilité avec l'ancienne fonction isSchoolVac
@@ -1593,16 +1593,31 @@ function showDayCard(y, m, day) {
 }
 
 // ════════════════════════════════════════════════════════
-//  INIT
+//  INIT — tout est dynamique, basé sur la date réelle
 // ════════════════════════════════════════════════════════
-document.getElementById('footerYear').textContent = new Date().getFullYear();
-const villesEl = document.getElementById('zoneVilles');
-if(villesEl) villesEl.textContent = ZONE_VILLES[currentZone];
-renderYearGrid();
-renderBigMonth();
-renderVacances(currentZone);
-renderNextFeries();
-renderTodayBox();
+(function init() {
+  const now  = new Date();
+  const year = now.getFullYear();
+
+  // Année dans le sélecteur
+  document.getElementById('yearTitle').textContent = year;
+
+  // Footer
+  document.getElementById('footerYear').textContent = year;
+
+  // Villes zone par défaut
+  const villesEl = document.getElementById('zoneVilles');
+  if (villesEl) villesEl.textContent = ZONE_VILLES[currentZone];
+
+  // Calendrier
+  renderYearGrid();
+  renderBigMonth();
+
+  // Sidebar
+  renderVacances(currentZone);
+  renderNextFeries();
+  renderTodayBox();
+})();
 </script>
 </body>
 </html>
